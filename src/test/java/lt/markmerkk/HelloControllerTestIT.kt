@@ -6,15 +6,14 @@ import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.http.MediaType
 import org.springframework.test.context.junit4.SpringRunner
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 
 import org.hamcrest.Matchers.equalTo
+import org.junit.Before
 import org.junit.Ignore
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.boot.context.embedded.LocalServerPort
+import org.springframework.boot.test.web.client.TestRestTemplate
+import java.net.URL
 
 
 /**
@@ -26,18 +25,28 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @SpringBootTest
 @AutoConfigureMockMvc
 @Ignore
-class HelloControllerTest {
+class HelloControllerTestIT {
+
+    @LocalServerPort
+    private var port: Int = 0
+
+    lateinit private var base: URL
 
     @Autowired
-    lateinit var mvc: MockMvc
+    lateinit private var template: TestRestTemplate
+
+    @Before
+    @Throws(Exception::class)
+    fun setUp() {
+        this.base = URL("http://localhost:$port/")
+    }
 
     @Test
     @Throws(Exception::class)
     fun getHello() {
-        mvc.perform(MockMvcRequestBuilders.get("/")
-                .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().string(equalTo("Hello world!")))
+        val response = template.getForEntity(base.toString(),
+                String::class.java)
+        assertThat(response.getBody(), equalTo("Hello world!"))
     }
 
 }
